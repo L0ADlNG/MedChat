@@ -21,8 +21,9 @@ SYSTEM_PROMPT = """You are MedChat, a clinical AI assistant. Rules:
 2. Cite public sources using full institutional names
 3. Never mention personal health information
 4. Follow this citation format: (Source: [Organization Full Name])
-5. Give causes, symtoms, effects, medications or any other information when possible
-6. Whenever answer is better described in a tabular form, make a simple table"""
+5. Give causes, symptoms, effects, medications or any other information when possible
+6. Whenever answer is better described in a tabular form, make a simple table
+7. If the user is talking about an illness they are suffering from, give its long term effects if they do not get treatment and also give possibilities of what other disease it could be if applicable"""
 
 DISCLAIMER = """**Clinical Safety Protections**
 - Source citations preserved
@@ -44,7 +45,7 @@ st.sidebar.markdown(DISCLAIMER)
 def load_model():
     try:
         return genai.GenerativeModel(
-            model_name='gemini-2.0-flash',
+            model_name='gemini-1.5-pro-latest',
             safety_settings=SAFETY_SETTINGS,
             system_instruction=SYSTEM_PROMPT
         )
@@ -65,14 +66,26 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
 
+def format_history():
+    """Converts session messages to Gemini-compatible format"""
+    history = []
+    for msg in st.session_state.messages:
+        role = 'user' if msg["role"] == "user" else 'model'
+        history.append({
+            'role': role,
+            'parts': [{'text': msg["content"]}]
+        })
+    return history
+
 def generate_gemini_response(prompt: str) -> Generator[str, None, None]:
     try:
-        chat = model.start_chat(history=[])
+        # Start chat with formatted history
+        chat = model.start_chat(history=format_history())
         response = chat.send_message(
             prompt,
             stream=True,
             generation_config=genai.types.GenerationConfig(
-                max_output_tokens=2048,  
+                max_output_tokens=2048,
                 temperature=0.7,
                 top_p=0.95
             )
@@ -81,21 +94,18 @@ def generate_gemini_response(prompt: str) -> Generator[str, None, None]:
         buffer = ""
         for chunk in response:
             text = chunk.text
-            # Handle sentence completion
             if text and text[-1] in {'.', '!', '?', ':', '\n'}:
                 yield buffer + text
                 buffer = ""
             else:
                 buffer += text
                 
-        # Yield any remaining content
         if buffer:
             yield buffer
             
     except Exception as e:
         yield f"⚠️ Error: {str(e)}"
 
-# In the chat handling section:
 if prompt := st.chat_input("Ask a medical question..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     
@@ -109,18 +119,13 @@ if prompt := st.chat_input("Ask a medical question..."):
             full_response = ""
             response_generator = generate_gemini_response(prompt)
             
-            # Create a placeholder that will be updated
             response_placeholder = st.empty()
-            
             for chunk in response_generator:
                 full_response += chunk
-                # Update the placeholder with clean text
                 response_placeholder.markdown(full_response)
             
-            # Final clean update without cursor
             response_placeholder.markdown(full_response)
             
-            # Safety check
             if "consult" not in full_response.lower():
                 st.toast("Remember: Always verify with a healthcare provider", icon="⚠️")
             
