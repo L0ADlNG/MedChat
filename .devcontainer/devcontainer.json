@@ -6,15 +6,15 @@
     "codespaces": {
       "openFiles": [
         "README.md",
-        "main.py"
+        "main.py",
+        ".streamlit/secrets.toml"
       ]
     },
     "vscode": {
       "settings": {},
       "extensions": [
         "ms-python.python",
-        "ms-python.vscode-pylance",
-        ".streamlit/secrets.toml"
+        "ms-python.vscode-pylance"
       ]
     }
   },
