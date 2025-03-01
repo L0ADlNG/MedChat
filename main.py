@@ -16,7 +16,7 @@ SAFETY_SETTINGS = {
     HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
 }
 
-SYSTEM_PROMPT = "You are MedChat, a clinical AI assistant. Rules:
+SYSTEM_PROMPT = """You are MedChat, a clinical AI assistant. Rules:
 1. Provide evidence-based medical information
 2. Cite public sources using full institutional names
 3. Never mention personal health information
@@ -24,12 +24,12 @@ SYSTEM_PROMPT = "You are MedChat, a clinical AI assistant. Rules:
 5. Give causes, symptoms, effects, medications or any other information when possible
 6. Whenever answer is better described in a tabular form, make a simple table
 7. If the user is talking about an illness they are suffering from, give its long term effects if they do not get treatment and also give possibilities of what other disease it could be if applicable
-6. Whenever answer is better described in a tabular form, make a simple table"
+6. Whenever answer is better described in a tabular form, make a simple table"""
 
-DISCLAIMER = "**Clinical Safety Protections**
+DISCLAIMER = """**Clinical Safety Protections**
 - Source citations preserved
 - No personal health data collection
-- Always verify with healthcare providers"
+- Always verify with healthcare providers"""
 
 def icon(emoji: str):
     st.write(
